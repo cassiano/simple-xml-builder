@@ -23,21 +23,21 @@
 # end
 
 # # Should display [-1, 1]
-# puts cursor.position
+# p cursor.position
 
-# class Array
-#   private
+class Array
+  private
 
-#   def method_missing(name, *args, &block)
-#     if all? { |item| item.respond_to? name }
-#       map { |item| item.send name, *args, &block }
-#     elsif any? { |item| item.respond_to? name }
-#       raise "Sorry, but all items need to respond to method `#{name}` to allow it to be called over the whole collection"
-#     else
-#       super
-#     end
-#   end
-# end
+  def method_missing(name, *args, &block)
+    if all? { |item| item.respond_to? name }
+      map { |item| item.send name, *args, &block }
+    elsif any? { |item| item.respond_to? name }
+      raise "Sorry, but all items need to respond to method `#{name}` to allow it to be called over the whole collection"
+    else
+      super
+    end
+  end
+end
 
 class SimpleXMLBuilder
   attr_reader :root_element
@@ -50,18 +50,18 @@ class SimpleXMLBuilder
       # Exclude a few selected methods, ones that start and end with `__` or which contain at
       # least one non-word character (e.g. ?, ! etc).
       !(
-        %i[object_id instance_exec].include?(method) || method =~ /^__\w+__$/ ||
-          method =~ /\W/
+        %i[object_id instance_exec].include?(method) || # Remember to add :rand when running in Opal.
+          method.to_s =~ /^__\w+__$/ || method.to_s =~ /\W/
       )
     end
     .each { |method| undef_method method }
 
-  def initialize
-    @elements = []
-    @current_depth = 0
+  def initialize(&block)
+    build(&block) if block
   end
 
   def build(&block)
+    reset
     instance_exec &block
   end
 
@@ -70,6 +70,11 @@ class SimpleXMLBuilder
   end
 
   private
+
+  def reset
+    @elements = []
+    @current_depth = 0
+  end
 
   def method_missing(name, *args, &block)
     additional_params =
@@ -82,7 +87,7 @@ class SimpleXMLBuilder
 
     return unless block
 
-    increment_depth do
+    process_children_elements do
       previous_elements = elements.clone
 
       result = block.call
@@ -102,7 +107,7 @@ class SimpleXMLBuilder
     end
   end
 
-  def increment_depth(&block)
+  def process_children_elements(&block)
     @current_depth += 1
     block.call
     @current_depth -= 1
@@ -124,13 +129,11 @@ class XMLElement
   def str(depth = 0)
     if children
       children_as_string =
-        (
-          if children.is_a?(Array)
-            children.map { |child| child.str(depth + 1) }.join("\n")
-          else
-            [indentation(depth + 1), children].join
-          end
-        )
+        if children.is_a?(Array)
+          children.str(depth + 1).join("\n")
+        else
+          [indentation(depth + 1), children].join
+        end
 
       [
         indentation(depth) + opening_tag(attrs),
@@ -138,7 +141,7 @@ class XMLElement
         indentation(depth) + closing_tag,
       ].join("\n")
     else
-      indentation(depth) + opening_tag(attrs, self_closing_tag: true)
+      indentation(depth) + opening_tag(attrs, self_closing: true)
     end
   end
 
@@ -148,10 +151,10 @@ class XMLElement
     ' ' * INDENTATION_SPACING * depth
   end
 
-  def opening_tag(attrs, self_closing_tag: false)
+  def opening_tag(attrs, self_closing: false)
     attrs_as_string = attrs ? ' ' + attrs_as_key_value_pairs_string : ''
 
-    ['<', name, attrs_as_string, self_closing_tag ? ' /' : '', '>'].join
+    ['<', name, attrs_as_string, self_closing ? ' /' : '', '>'].join
   end
 
   def closing_tag
@@ -163,25 +166,16 @@ class XMLElement
   end
 end
 
-xml = SimpleXMLBuilder.new
-
-xml.document type: 'xml', use: 'example' do
-  xml.description 'This is an example of using SimpleXMLBuilder.'
-  xml.next_meeting date: Time.now + 100_000 do
-    xml.agenda 'Nothing of importance will be decided.'
-    xml.clearance level: 'classified'
+xml =
+  SimpleXMLBuilder.new do
+    document type: 'xml', use: 'example' do
+      description 'This is an example of using SimpleXMLBuilder2.'
+      next_meeting date: Time.now + 100_000 do
+        agenda 'Nothing of importance will be decided.'
+        clearance level: 'classified'
+      end
+    end
   end
-end
-
-# xml.build do
-#   document type: 'xml', use: 'example' do
-#     description 'This is an example of using SimpleXMLBuilder2.'
-#     next_meeting date: Time.now + 100_000 do
-#       agenda 'Nothing of importance will be decided.'
-#       clearance level: 'classified'
-#     end
-#   end
-# end
 
 puts xml.str
 
@@ -199,30 +193,30 @@ puts xml.str
 #   </next_meeting>
 # </document>
 
-xml = SimpleXMLBuilder.new
-
-xml.build do
-  html lang: 'en-US' do
-    head do
-      title 'Just a moment...'
-      link href: '/cdn-cgi/styles/challenges.css', rel: 'stylesheet'
-    end
-    body class: 'no-js' do
-      div class: 'main-wrapper', role: 'main'
-      div class: 'main-content' do
-        h1 class: 'zone-name-title h1' do
-          img class: 'heading-favicon', src: '/favicon.ico'
-        end
-        h2 class: 'h2', id: 'challenge-running' do
-          'Checking if the site connection is secure'
-        end
-        noscript do
-          div id: 'challenge-error-title' do
-            div class: 'h2' do
-              span class: 'icon-wrapper' do
-                div class: 'heading-icon warning-icon'
-                span 'Enable JavaScript and cookies to continue',
-                     id: 'challenge-error-text'
+xml =
+  SimpleXMLBuilder.new do
+    html lang: 'en-US' do
+      head do
+        title 'Just a moment...'
+        link href: '/cdn-cgi/styles/challenges.css', rel: 'stylesheet'
+      end
+      body class: 'no-js' do
+        div class: 'main-wrapper', role: 'main'
+        div class: 'main-content' do
+          h1 class: 'zone-name-title h1' do
+            img class: 'heading-favicon', src: '/favicon.ico'
+          end
+          h2 class: 'h2', id: 'challenge-running' do
+            'Checking if the site connection is secure'
+          end
+          noscript do
+            div id: 'challenge-error-title' do
+              div class: 'h2' do
+                span class: 'icon-wrapper' do
+                  div class: 'heading-icon warning-icon'
+                  span 'Enable JavaScript and cookies to continue',
+                       id: 'challenge-error-text'
+                end
               end
             end
           end
@@ -230,7 +224,6 @@ xml.build do
       end
     end
   end
-end
 
 puts
 puts xml.str
@@ -274,6 +267,7 @@ xml = SimpleXMLBuilder.new
 xml.build do
   report do
     name 'Annual Report'
+    xml.class 'Class of 94' # Notice the explicit use of the `xml` receiver, since `class` is a reserved word.
     12.times do |i|
       amounts month: i + 1 do
         expenses rand(1000)
