@@ -41,7 +41,8 @@ class SimpleXMLBuilder {
               additionalParams = [undefined, undefined]
               fn = args[0]
               break
-            default: // Probably a primitive value.
+            default: // args[0] is probably a primitive value.
+              // Ok if args[1] is undefined here. Same applies to args[0].
               additionalParams = [args[1], args[0]]
               fn = undefined
           }
@@ -60,14 +61,14 @@ class SimpleXMLBuilder {
 
             // Any new elements added?
             if (target.elements.length > previousElements.length) {
-              const addedElements = target.elements
-                .filter(
-                  ([depthA, elementA]) =>
-                    !previousElements.find(
-                      ([depthB, elementB]) =>
-                        depthA === depthB && elementA === elementB
-                    )
-                )
+              const isSameItem = ([depthA, elementA], [depthB, elementB]) =>
+                depthA === depthB && elementA === elementB
+
+              const addedElements = arraysDiff(
+                target.elements,
+                previousElements,
+                isSameItem
+              )
                 .filter(([depth, _]) => depth === target.currentDepth)
                 .map(([_, element]) => element)
 
@@ -140,6 +141,15 @@ class XMLElement {
   }
 }
 
+///////////////////////
+// Utility functions //
+///////////////////////
+
+const arraysDiff = (left, right, comparisonFn) =>
+  left.filter(
+    leftItem => !right.find(rightItem => comparisonFn(leftItem, rightItem))
+  )
+
 function times(count, fn) {
   const result = []
 
@@ -181,6 +191,7 @@ builder.build(xml => {
     })
     xml.body({ class: 'no-js' }, () => {
       xml.div({ class: 'main-wrapper', role: 'main' }, () => 'Some div')
+      xml.br()
     })
   })
 })
