@@ -180,6 +180,20 @@ const builder = new SimpleXMLBuilder(xml => {
 
 console.log(builder.str())
 
+/*
+<document type="xml" use="example">
+  <description>
+    This is an example of using SimpleXMLBuilder2.
+  </description>
+  <next_meeting date="Thu Jan 05 2023 01:15:29 GMT-0300 (Brasilia Standard Time)">
+    <agenda>
+      Nothing of importance will be decided.
+    </agenda>
+    <clearance level="classified" />
+  </next_meeting>
+</document>
+*/
+
 builder.build(xml => {
   xml.html({ lang: 'en-US' }, () => {
     xml.head(() => {
@@ -196,13 +210,31 @@ builder.build(xml => {
   })
 })
 
+/*
+<html lang="en-US">
+  <head>
+    <title>
+      Just a moment...
+    </title>
+    <link href="/cdn-cgi/styles/challenges.css" rel="stylesheet">
+      Some link
+    </link>
+  </head>
+  <body class="no-js">
+    <div class="main-wrapper" role="main">
+      Some div
+    </div>
+    <br />
+  </body>
+</html>
+*/
+
 console.log()
 console.log(builder.str())
 
 builder.build(xml => {
   xml.report(() => {
     xml.name(() => 'Annual Report')
-    xml.class(() => 'Class of 94')
     times(12, i => {
       xml.amounts({ month: i + 1 }, () => {
         xml.expenses(rand(1000))
@@ -214,3 +246,107 @@ builder.build(xml => {
 
 console.log()
 console.log(builder.str())
+
+/*
+<report>
+  <name>
+    Annual Report
+  </name>
+  <amounts month="1">
+    <expenses>
+      594
+    </expenses>
+    <revenue>
+      993
+    </revenue>
+  </amounts>
+  <amounts month="2">
+    <expenses>
+      299
+    </expenses>
+    <revenue>
+      546
+    </revenue>
+  </amounts>
+  <amounts month="3">
+    <expenses>
+      356
+    </expenses>
+    <revenue>
+      768
+    </revenue>
+  </amounts>
+  <amounts month="4">
+    <expenses>
+      323
+    </expenses>
+    <revenue>
+      612
+    </revenue>
+  </amounts>
+  <amounts month="5">
+    <expenses>
+      319
+    </expenses>
+    <revenue>
+      233
+    </revenue>
+  </amounts>
+  <amounts month="6">
+    <expenses>
+      939
+    </expenses>
+    <revenue>
+      684
+    </revenue>
+  </amounts>
+  <amounts month="7">
+    <expenses>
+      83
+    </expenses>
+    <revenue>
+      485
+    </revenue>
+  </amounts>
+  <amounts month="8">
+    <expenses>
+      33
+    </expenses>
+    <revenue>
+      230
+    </revenue>
+  </amounts>
+  <amounts month="9">
+    <expenses>
+      591
+    </expenses>
+    <revenue>
+      165
+    </revenue>
+  </amounts>
+  <amounts month="10">
+    <expenses>
+      9
+    </expenses>
+    <revenue>
+      4
+    </revenue>
+  </amounts>
+  <amounts month="11">
+    <expenses>
+      155
+    </expenses>
+    <revenue>
+      120
+    </revenue>
+  </amounts>
+  <amounts month="12">
+    <expenses>
+      866
+    </expenses>
+    <revenue>
+      127
+    </revenue>
+  </amounts>
+</report>
+*/
