@@ -57,7 +57,11 @@ class SimpleXMLBuilder
     .each { |method| undef_method method }
 
   def initialize(&block)
-    build(&block) if block
+    if block
+      build &block
+    else
+      reset
+    end
   end
 
   def build(&block)
@@ -72,6 +76,7 @@ class SimpleXMLBuilder
   private
 
   def reset
+    @root_element = nil
     @elements = []
     @current_depth = 0
   end
@@ -120,7 +125,7 @@ class XMLElement
   attr_reader :name, :attrs
   attr_accessor :children
 
-  def initialize(name, attrs = {}, children = [])
+  def initialize(name, attrs = nil, children = nil)
     @name = name
     @attrs = attrs
     @children = children
@@ -170,7 +175,7 @@ xml =
   SimpleXMLBuilder.new do
     document type: 'xml', use: 'example' do
       description 'This is an example of using SimpleXMLBuilder2.'
-      next_meeting date: Time.now + 100_000 do
+      next_meeting date: Time.now do
         agenda 'Nothing of importance will be decided.'
         clearance level: 'classified'
       end
