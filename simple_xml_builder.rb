@@ -82,10 +82,10 @@ class SimpleXMLBuilder
   end
 
   def method_missing(name, *args, &block)
-    additional_params =
+    additional_xml_element_params =
       args[0].is_a?(Hash) ? [args[0], nil] : [args[1], args[0]]
 
-    new_element = XMLElement.new(name, *additional_params)
+    new_element = XMLElement.new(name, *additional_xml_element_params)
 
     @root_element ||= new_element
     elements << [current_depth, new_element]
