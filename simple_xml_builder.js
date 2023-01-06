@@ -29,25 +29,24 @@ class SimpleXMLBuilder {
   createProxy() {
     const proxy = new Proxy(this, {
       get(target, name) {
-        return (...args) => {
-          let additionalParams, fn
+        return (arg1, arg2) => {
+          let additionalXMLElementParams, fn
 
-          switch (typeof args[0]) {
+          switch (typeof arg1) {
             case 'object':
-              additionalParams = [args[0], undefined]
-              fn = args[1]
+              additionalXMLElementParams = [arg1, undefined]
+              fn = arg2
               break
             case 'function':
-              additionalParams = [undefined, undefined]
-              fn = args[0]
+              additionalXMLElementParams = [undefined, undefined]
+              fn = arg1
               break
-            default: // args[0] is probably a primitive value.
-              // Ok if args[1] is undefined here. Same applies to args[0].
-              additionalParams = [args[1], args[0]]
+            default: // arg1 is probably a primitive value. Ok if any/both args are undefined here.
+              additionalXMLElementParams = [arg2, arg1]
               fn = undefined
           }
 
-          const newElement = new XMLElement(name, ...additionalParams)
+          const newElement = new XMLElement(name, ...additionalXMLElementParams)
 
           target.elements.push([target.currentDepth, newElement])
 
@@ -105,7 +104,7 @@ class XMLElement {
     if (this.children !== undefined) {
       const childrenAsString = Array.isArray(this.children)
         ? this.children.map(child => child.str(depth + 1)).join('\n')
-        : [this.indentation(depth + 1), this.children].join('')
+        : this.indentation(depth + 1) + this.children.toString()
 
       return [
         this.indentation(depth) + this.openingTag(),
@@ -125,13 +124,11 @@ class XMLElement {
     const attrsAsString =
       this.attrs !== undefined ? ' ' + this.attrsAsKeyValuePairsString() : ''
 
-    return ['<', this.name, attrsAsString, selfClosing ? ' /' : '', '>'].join(
-      ''
-    )
+    return `<${this.name}${attrsAsString}${selfClosing ? ' /' : ''}>`
   }
 
   closingTag() {
-    return ['</', this.name, '>'].join('')
+    return `</${this.name}>`
   }
 
   attrsAsKeyValuePairsString() {
