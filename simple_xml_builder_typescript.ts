@@ -30,13 +30,13 @@ class SimpleXMLBuilder {
   // Private methods //
   /////////////////////
 
-  reset(): void {
+  private reset(): void {
     this.rootElement = undefined
     this.elements = []
     this.currentDepth = 0
   }
 
-  createProxy(): this {
+  private createProxy(): this {
     const proxy: this = new Proxy(this, {
       get(target, name: string) {
         return (
@@ -54,18 +54,20 @@ class SimpleXMLBuilder {
               additionalXMLElementParams = [arg1, undefined]
 
               if (!(arg2 instanceof Function || arg2 === undefined))
-                throw new Error('Invalid type for arg2')
+                throw new Error(`Invalid type '${typeof arg2}' for arg2`)
 
               fn = arg2
               break
+
             case 'function':
               additionalXMLElementParams = [undefined, undefined]
 
               fn = arg1 as XMLBuilderFnType
               break
+
             default: // arg1 is probably a primitive value.
               if (arg2 instanceof Function)
-                throw new Error('Invalid type for arg2')
+                throw new Error(`Invalid type '${typeof arg2}' for arg2`)
 
               additionalXMLElementParams = [arg2, arg1]
 
@@ -80,7 +82,7 @@ class SimpleXMLBuilder {
 
           if (!fn) return
 
-          target.processChildrenElements(() => {
+          target.processChildren(() => {
             const previousElements = [...target.elements]
             const result = fn?.(proxy)
 
@@ -114,7 +116,7 @@ class SimpleXMLBuilder {
     return proxy
   }
 
-  processChildrenElements(fn: () => void): void {
+  private processChildren(fn: () => void): void {
     this.currentDepth++
     fn()
     this.currentDepth--
@@ -146,22 +148,26 @@ class XMLElement {
     }
   }
 
-  indentation(depth: number): string {
+  /////////////////////
+  // Private methods //
+  /////////////////////
+
+  private indentation(depth: number): string {
     return ' '.repeat(INDENTATION_SPACING * depth)
   }
 
-  openingTag(selfClosing: boolean = false): string {
+  private openingTag(selfClosing: boolean = false): string {
     const attrsAsString =
       this.attrs !== undefined ? ' ' + this.attrsAsKeyValuePairsString() : ''
 
     return `<${this.name}${attrsAsString}${selfClosing ? ' /' : ''}>`
   }
 
-  closingTag(): string {
+  private closingTag(): string {
     return `</${this.name}>`
   }
 
-  attrsAsKeyValuePairsString(): string {
+  private attrsAsKeyValuePairsString(): string {
     return Object.entries(this.attrs!)
       .map(([k, v]) => `${k}="${v}"`)
       .join(' ')

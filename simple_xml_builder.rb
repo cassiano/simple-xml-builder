@@ -28,15 +28,16 @@
 class Array
   private
 
-  def method_missing(name, *args, &block)
-    if all? { |item| item.respond_to? name }
-      map { |item| item.send name, *args, &block }
-    elsif any? { |item| item.respond_to? name }
-      raise "Sorry, but all items need to respond to method `#{name}` to allow it to be called over the whole collection"
-    else
-      super
-    end
-  end
+  # def method_missing(name, *args, &block)
+  #   if all? { |item| item.respond_to? name }
+  #     map { |item| item.send name, *args, &block }
+  #   else
+  #     super
+  #   end
+  # end
+
+  def method_missing(name, ...) =
+    all? { _1.respond_to? name } ? map { _1.send(name, ...) } : super
 end
 
 class SimpleXMLBuilder
@@ -51,7 +52,7 @@ class SimpleXMLBuilder
       # least one non-word character (e.g. ?, ! etc).
       !(
         %i[object_id instance_exec].include?(method) || # Remember to add :rand when running in Opal.
-          method.to_s =~ /^__\w+__$/ || method.to_s =~ /\W/
+          method.name =~ /^__\w+__$/ || method.name =~ /\W/
       )
     end
     .each { |method| undef_method method }
@@ -92,7 +93,7 @@ class SimpleXMLBuilder
 
     return unless block
 
-    process_children_elements do
+    process_children do
       previous_elements = elements.clone
 
       result = block.call
@@ -112,7 +113,7 @@ class SimpleXMLBuilder
     end
   end
 
-  def process_children_elements(&block)
+  def process_children(&block)
     @current_depth += 1
     block.call
     @current_depth -= 1

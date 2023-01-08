@@ -54,7 +54,7 @@ class SimpleXMLBuilder {
 
           if (!fn) return
 
-          target.processChildrenElements(() => {
+          target.processChildren(() => {
             const previousElements = [...target.elements]
             const result = fn(proxy)
 
@@ -84,7 +84,7 @@ class SimpleXMLBuilder {
     return proxy
   }
 
-  processChildrenElements(fn) {
+  processChildren(fn) {
     this.currentDepth++
     fn()
     this.currentDepth--
